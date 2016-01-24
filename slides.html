@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Starting with Scala on Android</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" type="text/css" href="https://zbsz.github.io/assets/css/remark.css" />
+</head>
+<body>
+<textarea id="source">
+
+    # Tools
+
+    - SBT - http://www.scala-sbt.org/
+    - Plug-ins (Android SDK, Robotest)
+    - Intellij IDEA (don't use Android Studio)
+
+    ---
+    # SBT
+
+    - declarative
+    - graph of tasks and settings
+    - executed in parallel, cached results
+
+    <br/>
+
+    Three stages of usage
+    - no idea how to use it
+    - know couple commands, can live with that
+    - finally understand, love it
+
+    ---
+    # Android SDK Plugin
+    <br/>
+    https://github.com/pfn/android-sdk-plugin
+
+    - android:package
+    - android:install
+    - android:run
+
+    ---
+    # Create new project
+
+    ```
+    /
+    |-- project
+       |-- build.properies
+    ```
+
+    ```scala
+       sbt.version=0.13.9
+    ```
+
+    ```
+       |-- plugins.sbt
+    ```
+
+    ```scala
+       addSbtPlugin("com.hanhuy.sbt" % "android-sdk-plugin" % "1.5.14")
+    ```
+
+    ```
+    |-- build.sbt
+    ```
+
+    ```scala
+       ...
+    ```
+
+    ```
+    |-- src/main
+       |-- AndroidManifest.xml
+       |-- scala
+         |-- ...
+    ```
+
+    ---
+    # Write tests
+
+    - `src/androidTests`
+    - Robolectric and ScalaTest
+
+    Robotest - https://github.com/zbsz/robotest
+
+    ```scala
+    class SampleRoboSpec extends FeatureSpec with RobolectricSuite {
+      ...
+    }
+    ```
+
+    ---
+    # Faster dev builds
+
+    Three ways to include library in the app
+    - regular dependency included directly in dex files
+    - added to proguard inputs (and then included in dex as part of proguard result)
+    - framework library, loaded on a device
+
+    ```xml
+    <application>
+        <uses-library android:name="scala_library_2.11"/>
+        ...
+    </application>
+    ```
+
+    ---
+    # Preload Scala library
+
+    - requires root
+    - do not use together with proguard
+    - download Scala - http://www.scala-lang.org/download/
+    - `dx --dex --output scala_library_211.jar scala-2.11.7/lib/scala-library.jar`
+    - push libraries to `/system/framework`
+    - add custom libs config to `/system/etc/permissions`
+
+    ```xml
+    <?xml version="1.0" encoding="utf-8"?>
+    <permissions>
+        <library name="scala_library_2.11"
+                 file="/system/framework/scala_library_211.jar" />
+        ...
+    </permissions>
+    ```
+
+    - reboot
+
+    ---
+    # Final optimisations
+
+    Customize build by overriding any SBT setting/task
+
+    ```scala
+    typedResources := false
+    retrolambdaEnabled := false
+    ```
+
+
+    Are some libraries including unused native libs?
+    ```scala
+    collectJni := Nil
+    ```
+
+    Are there some unused assets?
+    ```scala
+    collectResources := {
+      val (assets, res) = collectResources.value
+      (assets ** "*").get.foreach(_.delete())
+      (assets, res)
+    }
+    ```
+
+    ---
+    # Thank you
+    https://github.com/zbsz/scala_basics
+
+</textarea>
+<!--Remark-->
+<script src="https://gnab.github.io/remark/downloads/remark-latest.min.js"></script>
+<script type="text/javascript">
+		var slideshow = remark.create();
+</script>
+</body>
+</html>
